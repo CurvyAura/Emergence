@@ -2,9 +2,9 @@
 Particle Life Simulation Configuration
 Adjust these values to experiment with different behaviors!
 
+This is your control panel for the entire simulation!
 
-DEFAULT VALUES:
-
+DEFAULT VALUES (good starting points):
 Particle count: 20000
 Force Factor: 0.5000
 R-Max: 0.080
@@ -15,25 +15,42 @@ Number of Types: 6
 
 """
 
-# Simulation Parameters
-NUM_PARTICLES = 25000      # Reduced for better performance with quad rendering
-NUM_TYPES = 6            # 4 types for clear patterns
+# =============================================================================
+# SIMULATION SCALE - How big is your universe?
+# =============================================================================
+NUM_PARTICLES = 25000      # More particles = more complex patterns, but slower performance
+NUM_TYPES = 6              # Different "species" of particles - each behaves differently
 
-# Physics Parameters
-FORCE_FACTOR = 0.5       # Strong forces like successful implementations
-MIN_DISTANCE = 0.03      # Standard minimum distance
-REPULSION_STRENGTH = 2.0  # Multiplier for repulsion force when particles are too close
-RMAX = 0.08               # Classic interaction radius
-DAMPING = 0.950          # Increased damping for stability
-TIME_SCALE = 0.20        # Slower time scale for more stability
+# =============================================================================
+# PHYSICS ENGINE - The rules that govern how particles interact
+# =============================================================================
+FORCE_FACTOR = 0.5         # Master volume control for all forces (0.1 = gentle, 1.0 = chaotic)
+MIN_DISTANCE = 0.03        # Personal space bubble - particles push apart when too close
+REPULSION_STRENGTH = 2.0   # How hard particles push when they're invading personal space
+RMAX = 0.08                # Maximum interaction distance - particles ignore each other beyond this
+DAMPING = 0.950            # Friction in the universe (0.9 = realistic, 0.99 = space-like)
+TIME_SCALE = 0.20          # Speed of time itself (0.1 = slow motion, 0.5 = fast forward)
 
-# Boundary Behavior
-WRAP_BOUNDARIES = True   # True = wrap around edges, False = bounce off walls
-BOUNCE_DAMPING = 0.8    # Energy loss when bouncing (only used if WRAP_BOUNDARIES = False)
+# =============================================================================
+# WORLD BOUNDARIES - What happens at the edge of your universe?
+# =============================================================================
+WRAP_BOUNDARIES = True     # True = Pac-Man style wrap-around, False = bouncy walls
+BOUNCE_DAMPING = 0.8       # Energy lost when hitting walls (only matters if bouncing)
 
-# Visual Parameters
-PARTICLE_SIZE = 1.0     # Size of particles in pixels
-BACKGROUND_COLOR = (0.0, 0.0, 0.0, 1.0)  # Background color (R, G, B, A)
+# =============================================================================
+# VISUAL APPEARANCE - How your particles look on screen
+# =============================================================================
+PARTICLE_SIZE = 1.0        # Size in pixels - make bigger if particles are too small to see
+BACKGROUND_COLOR = (0.0, 0.0, 0.0, 1.0)  # Black space background (R, G, B, Alpha)
+
+
+#=============================================================================
+
+
+# DONT TOUCH PARTICLE COLOURS OR THE ATTRACTION MATRIX IN THE CONFIG (You can randomize/adjust these while running without issue)
+
+
+# =============================================================================
 
 # Particle Colors (R, G, B, A) - 4 colors only
 PARTICLE_COLORS = [
@@ -43,8 +60,16 @@ PARTICLE_COLORS = [
     (1.0, 1.0, 0.3, 1.0),  # Yellow
 ]
 
-# Attraction Matrix - Classic particle life values that actually work
-# Based on successful implementations
+# =============================================================================
+# THE ATTRACTION MATRIX - The heart of emergent behavior!
+# =============================================================================
+# This matrix defines how each particle type feels about every other type:
+#   Positive numbers = attraction (they like each other)
+#   Negative numbers = repulsion (they can't stand each other)  
+#   Zero = indifference (they ignore each other)
+# 
+# Think of it like a compatibility chart for dating apps, but for particles!
+# Small changes here can create completely different ecosystems.
 ATTRACTION_MATRIX = [
     # Red   Green Blue  Yellow
     [ 0.9,  0.5, -0.5,  0.7],  # Red
@@ -53,15 +78,22 @@ ATTRACTION_MATRIX = [
     [-0.5,  0.5, -0.5,  0.9],  # Yellow
 ]
 
-# Initial Conditions
-INITIAL_POSITION_RANGE = 0.8  # Spread particles out more initially
-INITIAL_VELOCITY_RANGE = 0.02  # Small random velocities
+# =============================================================================
+# STARTING CONDITIONS - How your universe begins
+# =============================================================================
+INITIAL_POSITION_RANGE = 0.8  # How spread out particles start (0.1 = clustered, 1.0 = everywhere)
+INITIAL_VELOCITY_RANGE = 0.02  # Initial random motion (0.0 = still, 0.1 = already moving)
 
-# Performance Settings
-WORK_GROUP_SIZE = 128   # Increased for better GPU utilization
-ENABLE_VSYNC = False    # Disable VSync for maximum FPS
+# =============================================================================
+# PERFORMANCE TUNING - Making it run smooth as butter
+# =============================================================================
+WORK_GROUP_SIZE = 128      # GPU optimization - bigger numbers = better performance on good GPUs
+ENABLE_VSYNC = False       # Turn off frame rate limiting for maximum speed
 
-# Dynamic Type System
-MIN_TYPES = 2           # Minimum number of particle types
-MAX_TYPES = 8           # Maximum number of particle types
-DEFAULT_ATTRACTION_RANGE = (-1.0, 1.0)  # Range for generating new attraction values
+# =============================================================================
+# DYNAMIC EXPERIMENTATION - Live editing while the simulation runs
+# =============================================================================
+# These control the range of the Q/W keys for changing particle types on the fly
+MIN_TYPES = 2              # Minimum number of particle species (2 = simple, boring)
+MAX_TYPES = 8              # Maximum number of particle species (8 = complex, chaotic)
+DEFAULT_ATTRACTION_RANGE = (-1.0, 1.0)  # Range for generating new random attractions
