@@ -16,7 +16,7 @@ Number of Types: 6
 """
 
 # Simulation Parameters
-NUM_PARTICLES = 25000     # Fewer particles like successful demos
+NUM_PARTICLES = 25000      # Reduced for better performance with quad rendering
 NUM_TYPES = 6            # 4 types for clear patterns
 
 # Physics Parameters
@@ -32,7 +32,7 @@ WRAP_BOUNDARIES = True   # True = wrap around edges, False = bounce off walls
 BOUNCE_DAMPING = 0.8    # Energy loss when bouncing (only used if WRAP_BOUNDARIES = False)
 
 # Visual Parameters
-PARTICLE_SIZE = 20.0     # Size of particles in pixels
+PARTICLE_SIZE = 1.0     # Size of particles in pixels
 BACKGROUND_COLOR = (0.0, 0.0, 0.0, 1.0)  # Background color (R, G, B, A)
 
 # Particle Colors (R, G, B, A) - 4 colors only
@@ -58,7 +58,8 @@ INITIAL_POSITION_RANGE = 0.8  # Spread particles out more initially
 INITIAL_VELOCITY_RANGE = 0.02  # Small random velocities
 
 # Performance Settings
-WORK_GROUP_SIZE = 64    # Number of particles per GPU work group
+WORK_GROUP_SIZE = 128   # Increased for better GPU utilization
+ENABLE_VSYNC = False    # Disable VSync for maximum FPS
 
 # Dynamic Type System
 MIN_TYPES = 2           # Minimum number of particle types

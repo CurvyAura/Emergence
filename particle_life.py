@@ -11,6 +11,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
     title = "Particle Life Simulation"
     window_size = (800, 600)
     resizable = True
+    vsync = False  # Disable VSync for maximum FPS
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -20,6 +21,10 @@ class ParticleLifeWindow(mglw.WindowConfig):
         
         print(f"OpenGL Version: {self.ctx.version_code}")
         print(f"GPU: {self.ctx.info['GL_RENDERER']}")
+        
+        # Enable blending for smooth circular particles with anti-aliasing
+        self.ctx.enable(moderngl.BLEND)
+        self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
         
         # Set up our first particles
         self.setup_particles()
@@ -171,18 +176,18 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print(self.attraction_matrix)
         
         # Create compute shader for particle life physics
-        compute_shader = """
+        compute_shader = f"""
         #version 430
         
-        layout(local_size_x = 64) in;
+        layout(local_size_x = {config.WORK_GROUP_SIZE}) in;
         
-        layout(std430, binding = 0) restrict buffer ParticleBuffer {
+        layout(std430, binding = 0) restrict buffer ParticleBuffer {{
             float particles[];  // x, y, vx, vy, type, pad, pad, pad for each particle
-        };
+        }};
         
-        layout(std430, binding = 1) restrict buffer AttractionBuffer {
+        layout(std430, binding = 1) restrict buffer AttractionBuffer {{
             float attractions[];  // attraction matrix flattened
-        };
+        }};
         
         uniform float dt;
         uniform int num_particles;
@@ -195,7 +200,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
         uniform bool wrap_boundaries;
         uniform float bounce_damping;
         
-        void main() {
+        void main() {{
             uint i = gl_GlobalInvocationID.x;
             if (i >= num_particles) return;
             
@@ -208,7 +213,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
             vec2 force = vec2(0.0);
             
             // Calculate forces from all other particles
-            for (uint j = 0; j < num_particles; j++) {
+            for (uint j = 0; j < num_particles; j++) {{
                 if (i == j) continue;
                 
                 uint base_j = j * 8;
@@ -218,30 +223,30 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 // Calculate distance (considering wrapping if enabled)
                 vec2 diff = pos_j - pos_i;
                 
-                if (wrap_boundaries) {
+                if (wrap_boundaries) {{
                     // Handle wrapping - find shortest distance considering wrap-around
-                    if (abs(diff.x) > 1.0) {
+                    if (abs(diff.x) > 1.0) {{
                         diff.x = diff.x > 0.0 ? diff.x - 2.0 : diff.x + 2.0;
-                    }
-                    if (abs(diff.y) > 1.0) {
+                    }}
+                    if (abs(diff.y) > 1.0) {{
                         diff.y = diff.y > 0.0 ? diff.y - 2.0 : diff.y + 2.0;
-                    }
-                }
+                    }}
+                }}
                 
                 float dist = length(diff);
                 
                 // Handle minimum distance with gentle repulsion
-                if (dist < min_distance) {
-                    if (dist > 0.001) {  // Avoid division by very small numbers
+                if (dist < min_distance) {{
+                    if (dist > 0.001) {{  // Avoid division by very small numbers
                         // Gentle repulsive force to separate overlapping particles
                         vec2 force_dir = normalize(diff);
                         // Use smoother repulsion curve: stronger when very close, gentler as distance increases
                         float overlap_ratio = (min_distance - dist) / min_distance;
                         float repulsion_magnitude = overlap_ratio * overlap_ratio;  // Quadratic for smoother response
                         force += force_dir * repulsion_magnitude * force_factor * repulsion_strength;
-                    }
+                    }}
                     continue;  // Skip normal force calculation
-                }
+                }}
                 
                 // Skip if too far
                 if (dist > max_distance) continue;
@@ -254,16 +259,16 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 float r_ratio = dist / max_distance;
                 
                 float force_magnitude;
-                if (r_ratio < 0.3) {
+                if (r_ratio < 0.3) {{
                     // Repulsion zone - linear repulsion
                     force_magnitude = r_ratio / 0.3 - 1.0;
-                } else if (r_ratio < 1.0) {
+                }} else if (r_ratio < 1.0) {{
                     // Attraction zone - smooth attraction with peak around 0.5
                     float x = (r_ratio - 0.3) / 0.7;
                     force_magnitude = x * (1.0 - x) * 4.0; // Peak at x=0.5
-                } else {
+                }} else {{
                     force_magnitude = 0.0;
-                }
+                }}
                 
                 // Apply attraction scaling and force factor
                 force_magnitude *= attraction;
@@ -271,7 +276,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 // Calculate final force
                 vec2 force_dir = normalize(diff);
                 force += force_dir * force_magnitude * force_factor;
-            }
+            }}
             
             // Apply force to velocity with damping
             vel_i += force * dt;
@@ -281,31 +286,31 @@ class ParticleLifeWindow(mglw.WindowConfig):
             pos_i += vel_i * dt;
             
             // Handle boundaries
-            if (wrap_boundaries) {
+            if (wrap_boundaries) {{
                 // Wrap around edges
                 if (pos_i.x > 1.0) pos_i.x -= 2.0;
                 if (pos_i.x < -1.0) pos_i.x += 2.0;
                 if (pos_i.y > 1.0) pos_i.y -= 2.0;
                 if (pos_i.y < -1.0) pos_i.y += 2.0;
-            } else {
+            }} else {{
                 // Bounce off walls
-                if (pos_i.x <= -1.0 || pos_i.x >= 1.0) {
+                if (pos_i.x <= -1.0 || pos_i.x >= 1.0) {{
                     vel_i.x *= -bounce_damping;
                     pos_i.x = clamp(pos_i.x, -0.99, 0.99);
-                }
+                }}
                 
-                if (pos_i.y <= -1.0 || pos_i.y >= 1.0) {
+                if (pos_i.y <= -1.0 || pos_i.y >= 1.0) {{
                     vel_i.y *= -bounce_damping;
                     pos_i.y = clamp(pos_i.y, -0.99, 0.99);
-                }
-            }
+                }}
+            }}
             
             // Write back to buffer
             particles[base_i] = pos_i.x;
             particles[base_i + 1] = pos_i.y;
             particles[base_i + 2] = vel_i.x;
             particles[base_i + 3] = vel_i.y;
-        }
+        }}
         """
         
         # Create the compute program
@@ -325,47 +330,68 @@ class ParticleLifeWindow(mglw.WindowConfig):
         self.particle_buffer.bind_to_storage_buffer(0)
         self.attraction_buffer.bind_to_storage_buffer(1)
         
-        # Rendering shaders with color support
+        # Rendering shaders with color support - using instanced quads for reliable particle rendering
         vertex_shader = f"""
         #version 330
         in vec2 position;
         in float particle_type;
+        in vec2 quad_vertex;  // Corner of the quad (-1,-1 to 1,1)
         out float type;
+        out vec2 quad_coord;  // Pass quad coordinates to fragment shader
         
         void main() {{
-            gl_Position = vec4(position, 0.0, 1.0);
-            gl_PointSize = {config.PARTICLE_SIZE};
+            // Convert particle size from pixels to normalized coordinates
+            float size_x = {config.PARTICLE_SIZE} / 400.0;  // Assuming 800 width
+            float size_y = {config.PARTICLE_SIZE} / 300.0;  // Assuming 600 height
+            
+            // Create a quad around the particle position
+            vec2 offset = quad_vertex * vec2(size_x, size_y);
+            gl_Position = vec4(position + offset, 0.0, 1.0);
             type = particle_type;
+            quad_coord = quad_vertex;  // Pass the quad coordinates (-1 to 1)
         }}
         """
         
         fragment_shader = f"""
         #version 330
         in float type;
+        in vec2 quad_coord;  // Quad coordinates from vertex shader
         out vec4 fragColor;
         
         void main() {{
+            // Create circular particles by discarding pixels outside radius
+            float distance_from_center = length(quad_coord);
+            if (distance_from_center > 1.0) {{
+                discard;  // Don't draw pixels outside the circle
+            }}
+            
+            // Optional: Add anti-aliasing by fading the edges
+            float alpha = 1.0 - smoothstep(0.8, 1.0, distance_from_center);
+            
             // Color particles based on type with dynamic colors
             int itype = int(type + 0.5);  // Round to nearest integer
             
+            vec3 color;
             // Use a simple color generation for types beyond predefined colors
             if (itype == 0) {{
-                fragColor = vec4(1.0, 0.3, 0.3, 1.0);  // Red
+                color = vec3(1.0, 0.3, 0.3);  // Red
             }} else if (itype == 1) {{
-                fragColor = vec4(0.3, 1.0, 0.3, 1.0);  // Green
+                color = vec3(0.3, 1.0, 0.3);  // Green
             }} else if (itype == 2) {{
-                fragColor = vec4(0.3, 0.3, 1.0, 1.0);  // Blue
+                color = vec3(0.3, 0.3, 1.0);  // Blue
             }} else if (itype == 3) {{
-                fragColor = vec4(1.0, 1.0, 0.3, 1.0);  // Yellow
+                color = vec3(1.0, 1.0, 0.3);  // Yellow
             }} else if (itype == 4) {{
-                fragColor = vec4(1.0, 0.3, 1.0, 1.0);  // Magenta
+                color = vec3(1.0, 0.3, 1.0);  // Magenta
             }} else if (itype == 5) {{
-                fragColor = vec4(0.3, 1.0, 1.0, 1.0);  // Cyan
+                color = vec3(0.3, 1.0, 1.0);  // Cyan
             }} else if (itype == 6) {{
-                fragColor = vec4(1.0, 0.6, 0.3, 1.0);  // Orange
+                color = vec3(1.0, 0.6, 0.3);  // Orange
             }} else {{
-                fragColor = vec4(0.8, 0.8, 0.8, 1.0);  // White/Gray
+                color = vec3(0.8, 0.8, 0.8);  // White/Gray
             }}
+            
+            fragColor = vec4(color, alpha);
         }}
         """
         
@@ -375,13 +401,28 @@ class ParticleLifeWindow(mglw.WindowConfig):
             fragment_shader=fragment_shader
         )
         
-        # Create vertex array for rendering (positions and types)
+        # Create quad vertices for instanced rendering (each particle becomes a quad)
+        quad_vertices = np.array([
+            -1.0, -1.0,  # Bottom-left
+             1.0, -1.0,  # Bottom-right
+            -1.0,  1.0,  # Top-left
+             1.0,  1.0,  # Top-right
+        ], dtype=np.float32)
+        
+        quad_indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)  # Two triangles
+        
+        self.quad_buffer = self.ctx.buffer(quad_vertices.tobytes())
+        self.index_buffer = self.ctx.buffer(quad_indices.tobytes())
+        
+        # Create vertex array for instanced rendering
         self.vertex_array = self.ctx.vertex_array(
             self.program, 
             [
-                (self.position_buffer, '2f', 'position'),
-                (self.type_buffer, '1f', 'particle_type')
-            ]
+                (self.position_buffer, '2f/i', 'position'),      # Per instance (particle)
+                (self.type_buffer, '1f/i', 'particle_type'),    # Per instance (particle)
+                (self.quad_buffer, '2f', 'quad_vertex'),        # Per vertex (quad corner)
+            ],
+            self.index_buffer
         )
         
     def on_render(self, time, frame_time):
@@ -394,8 +435,8 @@ class ParticleLifeWindow(mglw.WindowConfig):
         bg = config.BACKGROUND_COLOR
         self.ctx.clear(bg[0], bg[1], bg[2], bg[3])
         
-        # Draw our particles as points
-        self.vertex_array.render(moderngl.POINTS)
+        # Draw our particles as instanced quads (much more reliable than points)
+        self.vertex_array.render(instances=self.num_particles)
         
     def update_particles(self, frame_time):
         """Update particle physics using GPU compute shader with life rules"""
