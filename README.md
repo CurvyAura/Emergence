@@ -94,7 +94,6 @@ Key parameters can be adjusted in `config.py`:
 - `main.py`: Entry point
 - `particle_life.py`: Core simulation logic and GPU shaders
 - `config.py`: Configuration parameters
-- `DYNAMIC_TYPES_README.md`: Detailed feature documentation
 
 ## Contributing
 
