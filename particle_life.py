@@ -48,6 +48,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
         print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
+        print("C   - Cycle Colour Palettes (Classic/Neon/Pastel/Ocean/Fire/Monochrome/Purple)")
         print("M   - Randomize Attraction Matrix (try for new behaviors!)")
         print("H   - Show this help")
         print("P   - Print current values")
@@ -409,7 +410,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
         self.particle_buffer.bind_to_storage_buffer(0)
         self.attraction_buffer.bind_to_storage_buffer(1)
         
-        # Rendering shaders with color support - using instanced quads for reliable particle rendering
+        # Rendering shaders with colour support - using instanced quads for reliable particle rendering
         vertex_shader = f"""
         #version 330
         in vec2 position;
@@ -437,6 +438,8 @@ class ParticleLifeWindow(mglw.WindowConfig):
         in vec2 quad_coord;  // Quad coordinates from vertex shader
         out vec4 fragColor;
         
+        uniform vec3 colours[8];  // Array of colours for up to 8 particle types
+        
         void main() {{
             // Create circular particles by discarding pixels outside radius
             float distance_from_center = length(quad_coord);
@@ -447,30 +450,17 @@ class ParticleLifeWindow(mglw.WindowConfig):
             // Optional: Add anti-aliasing by fading the edges
             float alpha = 1.0 - smoothstep(0.8, 1.0, distance_from_center);
             
-            // Color particles based on type with dynamic colors
+            // Colour particles based on type using dynamic colours
             int itype = int(type + 0.5);  // Round to nearest integer
             
-            vec3 color;
-            // Use a simple color generation for types beyond predefined colors
-            if (itype == 0) {{
-                color = vec3(1.0, 0.3, 0.3);  // Red
-            }} else if (itype == 1) {{
-                color = vec3(0.3, 1.0, 0.3);  // Green
-            }} else if (itype == 2) {{
-                color = vec3(0.3, 0.3, 1.0);  // Blue
-            }} else if (itype == 3) {{
-                color = vec3(1.0, 1.0, 0.3);  // Yellow
-            }} else if (itype == 4) {{
-                color = vec3(1.0, 0.3, 1.0);  // Magenta
-            }} else if (itype == 5) {{
-                color = vec3(0.3, 1.0, 1.0);  // Cyan
-            }} else if (itype == 6) {{
-                color = vec3(1.0, 0.6, 0.3);  // Orange
+            vec3 colour;
+            if (itype >= 0 && itype < 8) {{
+                colour = colours[itype];
             }} else {{
-                color = vec3(0.8, 0.8, 0.8);  // White/Gray
+                colour = vec3(0.8, 0.8, 0.8);  // Default white/gray for out-of-range types
             }}
             
-            fragColor = vec4(color, alpha);
+            fragColor = vec4(colour, alpha);
         }}
         """
         
@@ -510,7 +500,19 @@ class ParticleLifeWindow(mglw.WindowConfig):
         # Update particle physics
         self.update_particles(frame_time)
         
-        # Clear the screen with configurable background color
+        # Update colour uniforms for current palette
+        colours_array = []
+        for i in range(8):
+            if i < len(config.PARTICLE_COLOURS):
+                colour = config.PARTICLE_COLOURS[i]
+                colours_array.append((colour[0], colour[1], colour[2]))
+            else:
+                colours_array.append((0.8, 0.8, 0.8))  # Default grey
+        
+        # Set the colours array as a uniform (list of tuples)
+        self.program['colours'] = colours_array
+        
+        # Clear the screen with configurable background colour
         bg = config.BACKGROUND_COLOR
         self.ctx.clear(bg[0], bg[1], bg[2], bg[3])
         
@@ -635,6 +637,17 @@ class ParticleLifeWindow(mglw.WindowConfig):
         elif key == 109:  # 'M' key
             self.randomize_attraction_matrix()
             
+        # C - Cycle Colour Palettes
+        elif key == 99:  # 'C' key
+            old_index = config.CURRENT_PALETTE_INDEX
+            config.CURRENT_PALETTE_INDEX = (config.CURRENT_PALETTE_INDEX + 1) % len(config.COLOUR_PALETTES)
+            config.PARTICLE_COLOURS = config.COLOUR_PALETTES[config.CURRENT_PALETTE_INDEX]
+            
+            palette_names = ["Classic", "Neon", "Pastel", "Ocean", "Fire", "Monochrome", "Purple"]
+            old_name = palette_names[old_index] if old_index < len(palette_names) else f"Palette {old_index}"
+            new_name = palette_names[config.CURRENT_PALETTE_INDEX] if config.CURRENT_PALETTE_INDEX < len(palette_names) else f"Palette {config.CURRENT_PALETTE_INDEX}"
+            print(f"COLOUR PALETTE: {old_name} -> {new_name}")
+            
         # H - Help (key 104)
         elif key == 104:  # 'H' key
             self.print_controls()
@@ -666,6 +679,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
         print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
+        print("C   - Cycle Colour Palettes")
         print("M   - Randomize Attraction Matrix")
         print("H   - Show this help")
         print("P   - Print current values")
