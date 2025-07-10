@@ -1,6 +1,9 @@
 """
 Particle Life Simulation
 A GPU-accelerated particle life simulation using ModernGL
+
+Copyright (c) 2025 CurvyAura
+Licensed under MIT License - see LICENSE file for details
 """
 
 import ctypes

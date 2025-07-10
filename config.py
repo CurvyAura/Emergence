@@ -4,14 +4,17 @@ Adjust these values to experiment with different behaviors!
 
 This is your control panel for the entire simulation!
 
+Copyright (c) 2025 CurvyAura
+Licensed under MIT License - see LICENSE file for details
+
 DEFAULT VALUES (good starting points):
-Particle count: 20000
-Force Factor: 0.5000
-R-Max: 0.080
-Damping: 0.900
-Time Scale: 0.26
+Particle count: 10000
+Force Factor: 0.4000
+R-Max: 0.08
+Damping: 0.998
+Time Scale: 0.20
 Boundaries: WRAP
-Number of Types: 6
+Number of Types: 4
 
 """
 

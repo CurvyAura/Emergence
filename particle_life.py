@@ -1,3 +1,11 @@
+"""
+Particle Life Simulation - Core GPU-accelerated simulation engine
+Features real-time parameter adjustment and emergent behavior exploration
+
+Copyright (c) 2025 CurvyAura
+Licensed under MIT License - see LICENSE file for details
+"""
+
 import moderngl_window as mglw
 import moderngl
 import numpy as np

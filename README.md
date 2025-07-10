@@ -2,9 +2,7 @@
 
 A GPU-accelerated particle life simulation built with Python and ModernGL, featuring real-time parameter adjustment and dynamic emergent behavior exploration.
 
-## Features
-
-### 🎮 Interactive Controls
+### 🎮 Keybinds
 - **1/2**: Adjust Force Factor
 - **3/4**: Adjust Interaction Radius (R-Max)
 - **5/6**: Adjust Damping
@@ -16,20 +14,6 @@ A GPU-accelerated particle life simulation built with Python and ModernGL, featu
 - **M**: Randomize Attraction Matrix
 - **H**: Show Help
 - **P**: Print Current Values
-
-### 🔬 Advanced Features
-- **Dynamic Type System**: Change particle types in real-time
-- **Anti-Overlap Technology**: Prevents particle consumption with gentle repulsion
-- **Matrix Randomization**: Discover new emergent behaviors instantly
-- **GPU Acceleration**: Efficient compute shaders for smooth performance
-- **Stable Physics**: Carefully tuned parameters for realistic behavior
-
-### 🎯 Key Capabilities
-- Up to 20,000 particles with 60+ FPS performance
-- 8 different particle types with unique colors
-- Real-time attraction matrix modification
-- Emergent pattern discovery through randomization
-- Boundary behavior switching (wrap-around vs bouncing)
 
 ## Installation
 
@@ -51,8 +35,8 @@ A GPU-accelerated particle life simulation built with Python and ModernGL, featu
 
 ## How It Works
 
-### Particle Life Algorithm
-This simulation implements the "Particle Life" algorithm where particles of different types have varying attraction/repulsion relationships. The emergent behaviors arise from these simple rules:
+### Particle "Life"
+The emergent behaviors arise from these simple rules:
 
 1. **Attraction/Repulsion**: Each particle type has different relationships with others
 2. **Distance-Based Forces**: Force strength varies with distance (repulsion when close, attraction at medium range)
@@ -97,6 +81,8 @@ Key parameters can be adjusted in `config.py`:
 
 ## Contributing
 
+This Project was inspired by Jeffrey Ventrella.
+
 Feel free to contribute improvements, new features, or bug fixes! Some ideas:
 - Additional particle interaction models
 - Save/load system for interesting configurations
@@ -105,8 +91,14 @@ Feel free to contribute improvements, new features, or bug fixes! Some ideas:
 
 ## License
 
-This project is open source. Feel free to use, modify, and distribute.
+**MIT License**
+
+Copyright (c) 2025 CurvyAura
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
-
-**Explore the fascinating world of emergent complexity!** 🌟
