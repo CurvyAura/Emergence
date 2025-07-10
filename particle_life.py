@@ -31,18 +31,20 @@ class ParticleLifeWindow(mglw.WindowConfig):
         
         # Print controls on startup
         print("\n" + "="*50)
-        print("PARTICLE LIFE CONTROLS")
+        print("PARTICLE LIFE CONTROLS - MOMENTUM EDITION")
         print("="*50)
         print("1/2 - Decrease/Increase Force Factor")
         print("3/4 - Decrease/Increase R-Max")
-        print("5/6 - Decrease/Increase Damping") 
+        print("5/6 - Decrease/Increase Damping (fine-tuned for clusters)") 
         print("7/8 - Decrease/Increase Time Scale")
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
         print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
-        print("M   - Randomize Attraction Matrix")
+        print("M   - Randomize Attraction Matrix (try for new behaviors!)")
         print("H   - Show this help")
         print("P   - Print current values")
+        print("NEW: Adaptive damping preserves cluster momentum!")
+        print("NEW: Momentum transfer creates dynamic 'ship' behaviors!")
         print("="*50 + "\n")
         
     def randomize_attraction_matrix(self):
@@ -209,6 +211,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
             int type_i = int(particles[base_i + 4]);
             
             vec2 force = vec2(0.0);
+            int neighbor_count = 0;  // Count nearby particles for adaptive damping
             
             // Calculate forces from all other particles
             for (uint j = 0; j < num_particles; j++) {{
@@ -216,6 +219,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 
                 uint base_j = j * 8;
                 vec2 pos_j = vec2(particles[base_j], particles[base_j + 1]);
+                vec2 vel_j = vec2(particles[base_j + 2], particles[base_j + 3]);
                 int type_j = int(particles[base_j + 4]);
                 
                 // Calculate distance (considering wrapping if enabled)
@@ -232,6 +236,11 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 }}
                 
                 float dist = length(diff);
+                
+                // Count neighbors for adaptive damping
+                if (dist < max_distance) {{
+                    neighbor_count++;
+                }}
                 
                 // Skip if within minimum distance (collision resolution will handle this)
                 if (dist < min_distance) {{
@@ -263,14 +272,32 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 // Apply attraction scaling and force factor
                 force_magnitude *= attraction;
                 
-                // Calculate final force
+                // Calculate basic force
                 vec2 force_dir = normalize(diff);
-                force += force_dir * force_magnitude * force_factor;
+                vec2 basic_force = force_dir * force_magnitude * force_factor;
+                
+                // Add momentum transfer for cluster coherence
+                // Strongly attracted particles should share momentum
+                if (abs(attraction) > 0.3 && dist < max_distance * 0.6) {{
+                    vec2 vel_diff = vel_j - vel_i;
+                    vec2 momentum_transfer = vel_diff * 0.015 * abs(attraction);
+                    basic_force += momentum_transfer;
+                }}
+                
+                force += basic_force;
             }}
             
-            // Apply force to velocity with damping
+            // Adaptive damping: clusters get less damping to maintain momentum
+            float adaptive_damping = damping;
+            if (neighbor_count > 5) {{
+                // Reduce damping for particles in dense clusters
+                float density_factor = min(float(neighbor_count) / 15.0, 0.7);
+                adaptive_damping = mix(damping, 0.9995, density_factor);
+            }}
+            
+            // Apply damping first to existing velocity, then add new force
+            vel_i *= adaptive_damping;
             vel_i += force * dt;
-            vel_i *= damping;
             
             // Update position
             pos_i += vel_i * dt;
@@ -548,12 +575,12 @@ class ParticleLifeWindow(mglw.WindowConfig):
         # 5/6 - Damping
         elif key == 53:  # '5' key
             old_val = config.DAMPING
-            config.DAMPING = max(0.8, config.DAMPING - 0.01)
-            print(f"DAMPING: {old_val:.3f} -> {config.DAMPING:.3f}")
+            config.DAMPING = max(0.98, config.DAMPING - 0.001)
+            print(f"DAMPING: {old_val:.4f} -> {config.DAMPING:.4f}")
         elif key == 54:  # '6' key
             old_val = config.DAMPING
-            config.DAMPING = min(1.0, config.DAMPING + 0.01)
-            print(f"DAMPING: {old_val:.3f} -> {config.DAMPING:.3f}")
+            config.DAMPING = min(1.0, config.DAMPING + 0.001)
+            print(f"DAMPING: {old_val:.4f} -> {config.DAMPING:.4f}")
             
         # 7/8 - Time Scale
         elif key == 55:  # '7' key

@@ -18,18 +18,20 @@ Number of Types: 6
 # =============================================================================
 # SIMULATION SCALE - How big is your universe?
 # =============================================================================
-NUM_PARTICLES = 20000      # More particles = more complex patterns, but slower performance
-NUM_TYPES = 6              # Different "species" of particles - each behaves differently
+# SIMULATION SCALE - How big is your universe?
+# =============================================================================
+NUM_PARTICLES = 12000      # Sweet spot for complex patterns without excessive clumping
+NUM_TYPES = 6              # More types = more complex interactions and behaviors
 
 # =============================================================================
 # PHYSICS ENGINE - The rules that govern how particles interact
 # =============================================================================
-FORCE_FACTOR = 0.10         # Master volume control for all forces (0.1 = gentle, 1.0 = chaotic)
-MIN_DISTANCE = 0.008       # Hard collision radius - roughly matches visual particle size
+FORCE_FACTOR = 0.1         # Much higher force for stronger cluster formation and movement
+MIN_DISTANCE = 0.005       # Smaller collision radius to allow closer interactions
 REPULSION_STRENGTH = 2.0   # Legacy parameter (kept for compatibility but no longer used)
-RMAX = 0.20                # Maximum interaction distance - particles ignore each other beyond this
-DAMPING = 0.90            # Friction in the universe (0.9 = realistic, 0.99 = space-like)
-TIME_SCALE = 0.20          # Speed of time itself (0.1 = slow motion, 0.5 = fast forward)
+RMAX = 0.035               # Larger radius for more long-range cluster coherence
+DAMPING = 0.995            # Less damping to preserve cluster momentum and velocity
+TIME_SCALE = 0.4           # Slightly higher time scale for more responsive dynamics
 
 # =============================================================================
 # WORLD BOUNDARIES - What happens at the edge of your universe?
@@ -70,19 +72,23 @@ PARTICLE_COLORS = [
 # 
 # Think of it like a compatibility chart for dating apps, but for particles!
 # Small changes here can create completely different ecosystems.
+# 
+# Improved attraction matrix for dynamic ships and orbital behaviors:
 ATTRACTION_MATRIX = [
-    # Red   Green Blue  Yellow
-    [ 0.9,  0.5, -0.5,  0.7],  # Red
-    [-0.5,  0.0,  0.5, -0.3],  # Green  
-    [ 0.5, -0.5,  0.9,  0.5],  # Blue
-    [-0.5,  0.5, -0.5,  0.9],  # Yellow
+    # Red   Green Blue  Yellow Magenta Cyan
+    [ 0.1,   0.8, -0.9,  0.6,  -0.5,   0.4],  # Red: strongly chases Green, flees Blue
+    [-0.4,   0.2,  0.9, -0.8,   0.7,  -0.3],  # Green: loves Blue, hates Yellow, likes Magenta  
+    [ 0.7,  -0.6,  0.1,  0.8,  -0.9,   0.5],  # Blue: attracts Yellow, repels Magenta strongly
+    [-0.5,   0.6, -0.7,  0.3,   0.9,  -0.4],  # Yellow: complex mixed relationships
+    [ 0.9,  -0.3,  0.4, -0.6,   0.2,   0.8],  # Magenta: chases Red and Cyan, mixed others
+    [-0.6,   0.5, -0.4,  0.7,  -0.8,   0.1],  # Cyan: creates orbital dynamics and ships
 ]
 
 # =============================================================================
 # STARTING CONDITIONS - How your universe begins
 # =============================================================================
-INITIAL_POSITION_RANGE = 0.8  # How spread out particles start (0.1 = clustered, 1.0 = everywhere)
-INITIAL_VELOCITY_RANGE = 0.02  # Initial random motion (0.0 = still, 0.1 = already moving)
+INITIAL_POSITION_RANGE = 0.9  # Spread particles widely to prevent initial clumping
+INITIAL_VELOCITY_RANGE = 0.12  # Higher initial momentum for more dynamic cluster formation
 
 # =============================================================================
 # PERFORMANCE TUNING - Making it run smooth as butter
