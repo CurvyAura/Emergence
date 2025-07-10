@@ -21,8 +21,6 @@ Number of Types: 4
 # =============================================================================
 # SIMULATION SCALE - How big is your universe?
 # =============================================================================
-# SIMULATION SCALE - How big is your universe?
-# =============================================================================
 NUM_PARTICLES = 15000       # Fewer particles for clearer ship visibility
 NUM_TYPES = 4              # Classic 4-type setup for clear ship formation
 

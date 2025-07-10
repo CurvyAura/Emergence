@@ -12,6 +12,7 @@ A GPU-accelerated particle life simulation built with Python and ModernGL, featu
 - **E/R**: Adjust Minimum Distance
 - **T/Y**: Adjust Repulsion Strength
 - **M**: Randomize Attraction Matrix
+- **C**: Cycle Colour Scheme
 - **H**: Show Help
 - **P**: Print Current Values
 
