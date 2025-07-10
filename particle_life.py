@@ -39,8 +39,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("7/8 - Decrease/Increase Time Scale")
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
-        print("E/R - Decrease/Increase Min Distance")
-        print("T/Y - Decrease/Increase Repulsion Strength")
+        print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
         print("M   - Randomize Attraction Matrix")
         print("H   - Show this help")
         print("P   - Print current values")
@@ -194,7 +193,6 @@ class ParticleLifeWindow(mglw.WindowConfig):
         uniform int num_types;
         uniform float force_factor;
         uniform float min_distance;
-        uniform float repulsion_strength;
         uniform float max_distance;
         uniform float damping;
         uniform bool wrap_boundaries;
@@ -235,17 +233,9 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 
                 float dist = length(diff);
                 
-                // Handle minimum distance with gentle repulsion
+                // Skip if within minimum distance (collision resolution will handle this)
                 if (dist < min_distance) {{
-                    if (dist > 0.001) {{  // Avoid division by very small numbers
-                        // Gentle repulsive force to separate overlapping particles
-                        vec2 force_dir = normalize(diff);
-                        // Use smoother repulsion curve: stronger when very close, gentler as distance increases
-                        float overlap_ratio = (min_distance - dist) / min_distance;
-                        float repulsion_magnitude = overlap_ratio * overlap_ratio;  // Quadratic for smoother response
-                        force += force_dir * repulsion_magnitude * force_factor * repulsion_strength;
-                    }}
-                    continue;  // Skip normal force calculation
+                    continue;  // Skip force calculation for overlapping particles
                 }}
                 
                 // Skip if too far
@@ -285,7 +275,61 @@ class ParticleLifeWindow(mglw.WindowConfig):
             // Update position
             pos_i += vel_i * dt;
             
-            // Handle boundaries
+            // COLLISION RESOLUTION - Prevent overlapping entirely
+            // Check against all other particles and correct position if overlapping
+            vec2 total_correction = vec2(0.0);
+            int collision_count = 0;
+            
+            for (uint j = 0; j < num_particles; j++) {{
+                if (i == j) continue;
+                
+                uint base_j = j * 8;
+                vec2 pos_j = vec2(particles[base_j], particles[base_j + 1]);
+                
+                // Calculate distance (considering wrapping if enabled)
+                vec2 diff = pos_i - pos_j;
+                
+                if (wrap_boundaries) {{
+                    // Handle wrapping for collision detection
+                    if (abs(diff.x) > 1.0) {{
+                        diff.x = diff.x > 0.0 ? diff.x - 2.0 : diff.x + 2.0;
+                    }}
+                    if (abs(diff.y) > 1.0) {{
+                        diff.y = diff.y > 0.0 ? diff.y - 2.0 : diff.y + 2.0;
+                    }}
+                }}
+                
+                float dist = length(diff);
+                
+                // If particles are overlapping, accumulate correction
+                if (dist < min_distance && dist > 0.001) {{
+                    // Calculate overlap amount
+                    float overlap = min_distance - dist;
+                    
+                    // Normalize the difference vector
+                    vec2 separation_dir = diff / dist;
+                    
+                    // Add to total correction (smaller, more conservative movement)
+                    total_correction += separation_dir * (overlap * 0.1);
+                    collision_count++;
+                }}
+            }}
+            
+            // Apply accumulated correction with safety limits
+            if (collision_count > 0) {{
+                // Limit maximum correction per frame to prevent teleporting
+                float correction_magnitude = length(total_correction);
+                if (correction_magnitude > min_distance * 0.5) {{
+                    total_correction = normalize(total_correction) * (min_distance * 0.5);
+                }}
+                
+                pos_i += total_correction;
+                
+                // Dampen velocity only slightly to maintain natural motion
+                vel_i *= 0.95;
+            }}
+            
+            // Handle boundaries (after collision resolution)
             if (wrap_boundaries) {{
                 // Wrap around edges
                 if (pos_i.x > 1.0) pos_i.x -= 2.0;
@@ -304,6 +348,11 @@ class ParticleLifeWindow(mglw.WindowConfig):
                     pos_i.y = clamp(pos_i.y, -0.99, 0.99);
                 }}
             }}
+            
+            // Safety check: ensure particle position is reasonable
+            // Clamp to slightly beyond normal boundaries to prevent disappearing
+            pos_i.x = clamp(pos_i.x, -1.2, 1.2);
+            pos_i.y = clamp(pos_i.y, -1.2, 1.2);
             
             // Write back to buffer
             particles[base_i] = pos_i.x;
@@ -450,7 +499,6 @@ class ParticleLifeWindow(mglw.WindowConfig):
         self.compute_program['num_types'] = self.num_types
         self.compute_program['force_factor'] = config.FORCE_FACTOR
         self.compute_program['min_distance'] = config.MIN_DISTANCE
-        self.compute_program['repulsion_strength'] = config.REPULSION_STRENGTH
         self.compute_program['max_distance'] = config.RMAX
         self.compute_program['damping'] = config.DAMPING
         self.compute_program['wrap_boundaries'] = config.WRAP_BOUNDARIES
@@ -543,25 +591,15 @@ class ParticleLifeWindow(mglw.WindowConfig):
             else:
                 print(f"NUM TYPES: {self.num_types} (maximum reached)")
             
-        # E/R - Min Distance
+        # E/R - Min Distance (Hard Collision Radius)
         elif key == 101:  # 'E' key
             old_val = config.MIN_DISTANCE
             config.MIN_DISTANCE = max(0.005, config.MIN_DISTANCE - 0.002)
-            print(f"MIN DISTANCE: {old_val:.3f} -> {config.MIN_DISTANCE:.3f}")
+            print(f"MIN DISTANCE (Hard Collision Radius): {old_val:.3f} -> {config.MIN_DISTANCE:.3f}")
         elif key == 114:  # 'R' key
             old_val = config.MIN_DISTANCE
             config.MIN_DISTANCE = min(0.08, config.MIN_DISTANCE + 0.002)
-            print(f"MIN DISTANCE: {old_val:.3f} -> {config.MIN_DISTANCE:.3f}")
-            
-        # T/Y - Repulsion Strength
-        elif key == 116:  # 'T' key
-            old_val = config.REPULSION_STRENGTH
-            config.REPULSION_STRENGTH = max(0.5, config.REPULSION_STRENGTH - 0.2)
-            print(f"REPULSION STRENGTH: {old_val:.1f} -> {config.REPULSION_STRENGTH:.1f}")
-        elif key == 121:  # 'Y' key
-            old_val = config.REPULSION_STRENGTH
-            config.REPULSION_STRENGTH = min(10.0, config.REPULSION_STRENGTH + 0.2)
-            print(f"REPULSION STRENGTH: {old_val:.1f} -> {config.REPULSION_STRENGTH:.1f}")
+            print(f"MIN DISTANCE (Hard Collision Radius): {old_val:.3f} -> {config.MIN_DISTANCE:.3f}")
             
         # M - Randomize Attraction Matrix
         elif key == 109:  # 'M' key
@@ -597,8 +635,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("7/8 - Decrease/Increase Time Scale")
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
-        print("E/R - Decrease/Increase Min Distance")
-        print("T/Y - Decrease/Increase Repulsion Strength")
+        print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
         print("M   - Randomize Attraction Matrix")
         print("H   - Show this help")
         print("P   - Print current values")

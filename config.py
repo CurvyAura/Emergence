@@ -18,17 +18,17 @@ Number of Types: 6
 # =============================================================================
 # SIMULATION SCALE - How big is your universe?
 # =============================================================================
-NUM_PARTICLES = 25000      # More particles = more complex patterns, but slower performance
+NUM_PARTICLES = 20000      # More particles = more complex patterns, but slower performance
 NUM_TYPES = 6              # Different "species" of particles - each behaves differently
 
 # =============================================================================
 # PHYSICS ENGINE - The rules that govern how particles interact
 # =============================================================================
-FORCE_FACTOR = 0.5         # Master volume control for all forces (0.1 = gentle, 1.0 = chaotic)
-MIN_DISTANCE = 0.03        # Personal space bubble - particles push apart when too close
-REPULSION_STRENGTH = 2.0   # How hard particles push when they're invading personal space
-RMAX = 0.08                # Maximum interaction distance - particles ignore each other beyond this
-DAMPING = 0.950            # Friction in the universe (0.9 = realistic, 0.99 = space-like)
+FORCE_FACTOR = 0.10         # Master volume control for all forces (0.1 = gentle, 1.0 = chaotic)
+MIN_DISTANCE = 0.008       # Hard collision radius - roughly matches visual particle size
+REPULSION_STRENGTH = 2.0   # Legacy parameter (kept for compatibility but no longer used)
+RMAX = 0.20                # Maximum interaction distance - particles ignore each other beyond this
+DAMPING = 0.90            # Friction in the universe (0.9 = realistic, 0.99 = space-like)
 TIME_SCALE = 0.20          # Speed of time itself (0.1 = slow motion, 0.5 = fast forward)
 
 # =============================================================================
