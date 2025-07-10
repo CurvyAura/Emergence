@@ -20,18 +20,18 @@ Number of Types: 6
 # =============================================================================
 # SIMULATION SCALE - How big is your universe?
 # =============================================================================
-NUM_PARTICLES = 12000      # Sweet spot for complex patterns without excessive clumping
-NUM_TYPES = 6              # More types = more complex interactions and behaviors
+NUM_PARTICLES = 15000       # Fewer particles for clearer ship visibility
+NUM_TYPES = 4              # Classic 4-type setup for clear ship formation
 
 # =============================================================================
 # PHYSICS ENGINE - The rules that govern how particles interact
 # =============================================================================
-FORCE_FACTOR = 0.1         # Much higher force for stronger cluster formation and movement
-MIN_DISTANCE = 0.005       # Smaller collision radius to allow closer interactions
+FORCE_FACTOR = 0.4         # Lower force for smoother, less jittery movement
+MIN_DISTANCE = 0.008       # Slightly larger to reduce close-range instability
 REPULSION_STRENGTH = 2.0   # Legacy parameter (kept for compatibility but no longer used)
-RMAX = 0.035               # Larger radius for more long-range cluster coherence
-DAMPING = 0.995            # Less damping to preserve cluster momentum and velocity
-TIME_SCALE = 0.4           # Slightly higher time scale for more responsive dynamics
+RMAX = 0.08                # Smaller radius for more stable interactions
+DAMPING = 0.998            # Higher damping for smoother, less erratic movement
+TIME_SCALE = 0.2           # Slower time scale for more stable dynamics
 
 # =============================================================================
 # WORLD BOUNDARIES - What happens at the edge of your universe?
@@ -73,22 +73,20 @@ PARTICLE_COLORS = [
 # Think of it like a compatibility chart for dating apps, but for particles!
 # Small changes here can create completely different ecosystems.
 # 
-# Improved attraction matrix for dynamic ships and orbital behaviors:
+# Balanced 4x4 attraction matrix for moving ship creatures:
 ATTRACTION_MATRIX = [
-    # Red   Green Blue  Yellow Magenta Cyan
-    [ 0.1,   0.8, -0.9,  0.6,  -0.5,   0.4],  # Red: strongly chases Green, flees Blue
-    [-0.4,   0.2,  0.9, -0.8,   0.7,  -0.3],  # Green: loves Blue, hates Yellow, likes Magenta  
-    [ 0.7,  -0.6,  0.1,  0.8,  -0.9,   0.5],  # Blue: attracts Yellow, repels Magenta strongly
-    [-0.5,   0.6, -0.7,  0.3,   0.9,  -0.4],  # Yellow: complex mixed relationships
-    [ 0.9,  -0.3,  0.4, -0.6,   0.2,   0.8],  # Magenta: chases Red and Cyan, mixed others
-    [-0.6,   0.5, -0.4,  0.7,  -0.8,   0.1],  # Cyan: creates orbital dynamics and ships
+    # Red   Green Blue  Yellow
+    [ 0.1,   0.7, -0.5,  0.3],  # Red: moderate chase Green, mild attraction to Yellow
+    [-0.2,   0.1,  0.6, -0.4],  # Green: mild self-cohesion, moderate attraction to Blue
+    [ 0.4,  -0.3,  0.1,  0.5],  # Blue: moderate attractions, mild self-cohesion
+    [-0.3,   0.5, -0.6,  0.1],  # Yellow: moderate chase Green, mild self-cohesion
 ]
 
 # =============================================================================
 # STARTING CONDITIONS - How your universe begins
 # =============================================================================
-INITIAL_POSITION_RANGE = 0.9  # Spread particles widely to prevent initial clumping
-INITIAL_VELOCITY_RANGE = 0.12  # Higher initial momentum for more dynamic cluster formation
+INITIAL_POSITION_RANGE = 0.8  # Spread for better ship formation
+INITIAL_VELOCITY_RANGE = 0.08  # Higher initial velocity for directional movement
 
 # =============================================================================
 # PERFORMANCE TUNING - Making it run smooth as butter

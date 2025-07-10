@@ -43,8 +43,6 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("M   - Randomize Attraction Matrix (try for new behaviors!)")
         print("H   - Show this help")
         print("P   - Print current values")
-        print("NEW: Adaptive damping preserves cluster momentum!")
-        print("NEW: Momentum transfer creates dynamic 'ship' behaviors!")
         print("="*50 + "\n")
         
     def randomize_attraction_matrix(self):
@@ -253,24 +251,21 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 // Get attraction value between these types
                 float attraction = attractions[type_i * num_types + type_j];
                 
-                // Classic Jeffrey Ventrella Particle Life force function
-                // F(r) = attraction * f(r/rmax) where f is the standard force curve
+                // Smooth exponential force function for stable ship formation
                 float r_ratio = dist / max_distance;
                 
                 float force_magnitude;
-                if (r_ratio < 0.3) {{
-                    // Repulsion zone - linear repulsion
-                    force_magnitude = r_ratio / 0.3 - 1.0;
+                if (r_ratio < 0.15) {{
+                    // Close range: slightly stronger repulsion to spread dense clumps
+                    force_magnitude = -0.7 * (0.15 - r_ratio) / 0.15;
                 }} else if (r_ratio < 1.0) {{
-                    // Attraction zone - smooth attraction with peak around 0.5
-                    float x = (r_ratio - 0.3) / 0.7;
-                    force_magnitude = x * (1.0 - x) * 4.0; // Peak at x=0.5
+                    // Medium to long range: smooth exponential attraction
+                    float decay_factor = exp(-r_ratio * 2.0);  // Gentler exponential decay
+                    float smooth_factor = 1.0 / (1.0 + r_ratio * 2.0);  // Smoother than 1/r^2
+                    force_magnitude = attraction * decay_factor * smooth_factor;
                 }} else {{
                     force_magnitude = 0.0;
                 }}
-                
-                // Apply attraction scaling and force factor
-                force_magnitude *= attraction;
                 
                 // Calculate basic force
                 vec2 force_dir = normalize(diff);
@@ -278,9 +273,9 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 
                 // Add momentum transfer for cluster coherence
                 // Strongly attracted particles should share momentum
-                if (abs(attraction) > 0.3 && dist < max_distance * 0.6) {{
+                if (abs(attraction) > 0.2 && dist < max_distance * 0.8) {{
                     vec2 vel_diff = vel_j - vel_i;
-                    vec2 momentum_transfer = vel_diff * 0.015 * abs(attraction);
+                    vec2 momentum_transfer = vel_diff * 0.05 * abs(attraction);
                     basic_force += momentum_transfer;
                 }}
                 
@@ -559,7 +554,7 @@ class ParticleLifeWindow(mglw.WindowConfig):
             print(f"FORCE FACTOR: {old_val:.4f} -> {config.FORCE_FACTOR:.4f}")
         elif key == 50:  # '2' key
             old_val = config.FORCE_FACTOR
-            config.FORCE_FACTOR = min(0.1, config.FORCE_FACTOR + 0.001)
+            config.FORCE_FACTOR = min(2.0, config.FORCE_FACTOR + 0.001)
             print(f"FORCE FACTOR: {old_val:.4f} -> {config.FORCE_FACTOR:.4f}")
             
         # 3/4 - R-Max
