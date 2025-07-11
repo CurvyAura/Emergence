@@ -19,7 +19,8 @@ A GPU-accelerated particle life simulation built with Python and ModernGL, featu
 
 ## 🚀 Quick Start
 
-### Option 1: Download Executable (Recommended)
+### Option 1: Download Executable 
+(Not Recommended: Limited functionality, certain config values are unable to be tweaked i.e: particle count)
 **[Download Emergence.exe](https://drive.google.com/file/d/1q5e6ffPFukoZbqiuyIuZ7MAdUv_aEKHU/view?usp=sharing)** - Single file, no installation needed!
 
 ⚠️ **Security Notice**: Your antivirus may show warnings because this is an unsigned executable. This is normal for indie software. The complete source code is available below for verification.
