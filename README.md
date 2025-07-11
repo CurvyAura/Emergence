@@ -12,14 +12,26 @@ A GPU-accelerated particle life simulation built with Python and ModernGL, featu
 - **9**: Toggle Boundaries (wrap/bounce)
 - **Q/W**: Change Number of Particle Types (2-8)
 - **E/R**: Adjust Minimum Distance
-- **T/Y**: Adjust Repulsion Strength
+- **C**: Cycle Colour Schemes
 - **M**: Randomize Attraction Matrix
-- **C**: Cycle Colour Scheme
 - **H**: Show Help
 - **P**: Print Current Values
 
-## Installation
+## 🚀 Quick Start
 
+### Option 1: Download Executable (Recommended)
+**[Download Emergence.exe](https://drive.google.com/file/d/1q5e6ffPFukoZbqiuyIuZ7MAdUv_aEKHU/view?usp=sharing)** - Single file, no installation needed!
+
+⚠️ **Security Notice**: Your antivirus may show warnings because this is an unsigned executable. This is normal for indie software. The complete source code is available below for verification.
+
+**System Requirements:**
+- Windows 10/11
+- OpenGL 3.3+ compatible graphics card
+- ~80MB disk space
+
+Simply download and double-click to run!
+
+### Option 2: Run from Source
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/CurvyAura/Emergence.git
