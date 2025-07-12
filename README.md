@@ -4,14 +4,22 @@
 
 A GPU-accelerated particle life simulation built with Python and ModernGL, featuring real-time parameter adjustment and dynamic emergent behavior exploration.
 
-### 🎮 Keybinds
+### 🎮 Controls
+
+**Mouse Interaction:**
+- **Left Click + Drag**: Push particles away from cursor
+- **Mouse Wheel**: Adjust mouse repulsion radius
+
+**Keyboard:**
 - **1/2**: Adjust Force Factor
 - **3/4**: Adjust Interaction Radius (R-Max)
 - **5/6**: Adjust Damping
 - **7/8**: Adjust Time Scale
 - **9**: Toggle Boundaries (wrap/bounce)
+- **Spacebar**: Reset Particle Positions
 - **Q/W**: Change Number of Particle Types (2-8)
 - **E/R**: Adjust Minimum Distance
+- **T/Y**: Adjust Mouse Repulsion Strength
 - **C**: Cycle Colour Schemes
 - **M**: Randomize Attraction Matrix
 - **H**: Show Help

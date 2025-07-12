@@ -46,6 +46,12 @@ BOUNCE_DAMPING = 0.8       # Energy lost when hitting walls (only matters if bou
 PARTICLE_SIZE = 1.0        # Size in pixels - make bigger if particles are too small to see
 BACKGROUND_COLOR = (0.0, 0.0, 0.0, 1.0)  # Black space background (R, G, B, Alpha)
 
+# =============================================================================
+# MOUSE INTERACTION - Control particles with your cursor
+# =============================================================================
+MOUSE_REPULSION_STRENGTH = 5.0    # How strong the mouse push effect is
+MOUSE_REPULSION_RADIUS = 0.25     # How far from cursor the effect reaches
+
 
 #=============================================================================
 

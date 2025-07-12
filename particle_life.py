@@ -37,10 +37,19 @@ class ParticleLifeWindow(mglw.WindowConfig):
         # Set up our first particles
         self.setup_particles()
         
+        # Mouse interaction state
+        self.mouse_pressed = False
+        self.mouse_pos = (0.0, 0.0)  # Normalized coordinates (-1 to 1)
+        
         # Print controls on startup
         print("\n" + "="*50)
         print("PARTICLE LIFE CONTROLS - MOMENTUM EDITION")
         print("="*50)
+        print("MOUSE:")
+        print("Left Click + Drag - Push particles away from cursor")
+        print("Mouse Wheel - Adjust mouse repulsion radius")
+        print("")
+        print("KEYBOARD:")
         print("1/2 - Decrease/Increase Force Factor")
         print("3/4 - Decrease/Increase R-Max")
         print("5/6 - Decrease/Increase Damping (fine-tuned for clusters)") 
@@ -48,8 +57,10 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
         print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
+        print("T/Y - Decrease/Increase Mouse Repulsion Strength")
         print("C   - Cycle Colour Palettes (Classic/Neon/Pastel/Ocean/Fire/Monochrome/Purple)")
         print("M   - Randomize Attraction Matrix (try for new behaviors!)")
+        print("SPACE - Reset/Disperse Particles (fresh start!)")
         print("H   - Show this help")
         print("P   - Print current values")
         print("="*50 + "\n")
@@ -105,10 +116,40 @@ class ParticleLifeWindow(mglw.WindowConfig):
         
         # Rebind the new buffer to the compute shader
         self.attraction_buffer.bind_to_storage_buffer(1)
-        
         print(f"Rebuilt attraction matrix for {self.num_types} types:")
         print(self.attraction_matrix)
-    
+
+    def reset_particles(self):
+        """Reset particle positions and velocities to random dispersed state"""
+        print("🔄 Resetting particles - dispersing randomly...")
+        
+        # Generate new random positions and velocities
+        positions = np.random.uniform(
+            -config.INITIAL_POSITION_RANGE, 
+            config.INITIAL_POSITION_RANGE, 
+            (self.num_particles, 2)
+        ).astype(np.float32)
+        
+        velocities = np.random.uniform(
+            -config.INITIAL_VELOCITY_RANGE, 
+            config.INITIAL_VELOCITY_RANGE, 
+            (self.num_particles, 2)
+        ).astype(np.float32)
+        
+        # Read current particle data from GPU and make a writable copy
+        buffer_data = np.frombuffer(self.particle_buffer.read(), dtype=np.float32)
+        particle_data = buffer_data.reshape((self.num_particles, 8)).copy()  # Make writable copy
+        
+        # Update positions and velocities while keeping types
+        particle_data[:, 0:2] = positions  # x, y
+        particle_data[:, 2:4] = velocities # vx, vy
+        # Keep particle_data[:, 4] (types) unchanged
+        
+        # Write updated data back to GPU
+        self.particle_buffer.write(particle_data.tobytes())
+        
+        print("✨ Particles dispersed! Ready for new emergent behavior!")
+
     def reassign_particle_types(self):
         """Reassign particle types when number of types changes"""
         # Read current particle data and make a writable copy
@@ -206,6 +247,10 @@ class ParticleLifeWindow(mglw.WindowConfig):
         uniform float damping;
         uniform bool wrap_boundaries;
         uniform float bounce_damping;
+        uniform bool mouse_pressed;
+        uniform vec2 mouse_pos;
+        uniform float mouse_repulsion_strength;
+        uniform float mouse_repulsion_radius;
         
         void main() {{
             uint i = gl_GlobalInvocationID.x;
@@ -289,6 +334,23 @@ class ParticleLifeWindow(mglw.WindowConfig):
                 }}
                 
                 force += basic_force;
+            }}
+            
+            // Mouse repulsion force
+            if (mouse_pressed) {{
+                vec2 mouse_diff = pos_i - mouse_pos;
+                float mouse_dist = length(mouse_diff);
+                
+                if (mouse_dist < mouse_repulsion_radius && mouse_dist > 0.001) {{
+                    // Calculate repulsion force that falls off with distance
+                    float repulsion_factor = (mouse_repulsion_radius - mouse_dist) / mouse_repulsion_radius;
+                    repulsion_factor = repulsion_factor * repulsion_factor; // Square for sharper falloff
+                    
+                    vec2 repulsion_dir = normalize(mouse_diff);
+                    vec2 mouse_force = repulsion_dir * mouse_repulsion_strength * repulsion_factor;
+                    
+                    force += mouse_force;
+                }}
             }}
             
             // Adaptive damping: clusters get less damping to maintain momentum
@@ -535,6 +597,10 @@ class ParticleLifeWindow(mglw.WindowConfig):
         self.compute_program['damping'] = config.DAMPING
         self.compute_program['wrap_boundaries'] = config.WRAP_BOUNDARIES
         self.compute_program['bounce_damping'] = config.BOUNCE_DAMPING
+        self.compute_program['mouse_pressed'] = self.mouse_pressed
+        self.compute_program['mouse_pos'] = self.mouse_pos
+        self.compute_program['mouse_repulsion_strength'] = config.MOUSE_REPULSION_STRENGTH
+        self.compute_program['mouse_repulsion_radius'] = config.MOUSE_REPULSION_RADIUS
         
         # Dispatch the compute shader
         work_groups = (self.num_particles + config.WORK_GROUP_SIZE - 1) // config.WORK_GROUP_SIZE
@@ -633,6 +699,16 @@ class ParticleLifeWindow(mglw.WindowConfig):
             config.MIN_DISTANCE = min(0.08, config.MIN_DISTANCE + 0.002)
             print(f"MIN DISTANCE (Hard Collision Radius): {old_val:.3f} -> {config.MIN_DISTANCE:.3f}")
             
+        # T/Y - Mouse Repulsion Strength
+        elif key == 116:  # 'T' key
+            old_val = config.MOUSE_REPULSION_STRENGTH
+            config.MOUSE_REPULSION_STRENGTH = max(0.1, config.MOUSE_REPULSION_STRENGTH - 0.1)
+            print(f"MOUSE REPULSION STRENGTH: {old_val:.2f} -> {config.MOUSE_REPULSION_STRENGTH:.2f}")
+        elif key == 121:  # 'Y' key
+            old_val = config.MOUSE_REPULSION_STRENGTH
+            config.MOUSE_REPULSION_STRENGTH = min(5.0, config.MOUSE_REPULSION_STRENGTH + 0.1)
+            print(f"MOUSE REPULSION STRENGTH: {old_val:.2f} -> {config.MOUSE_REPULSION_STRENGTH:.2f}")
+            
         # M - Randomize Attraction Matrix
         elif key == 109:  # 'M' key
             self.randomize_attraction_matrix()
@@ -662,8 +738,13 @@ class ParticleLifeWindow(mglw.WindowConfig):
             print(f"Boundaries: {'WRAP' if config.WRAP_BOUNDARIES else 'BOUNCE'}")
             print(f"Number of Types: {self.num_types}")
             print(f"Min Distance: {config.MIN_DISTANCE:.3f}")
-            print(f"Repulsion Strength: {config.REPULSION_STRENGTH:.1f}")
+            print(f"Mouse Repulsion Strength: {config.MOUSE_REPULSION_STRENGTH:.2f}")
+            print(f"Mouse Repulsion Radius: {config.MOUSE_REPULSION_RADIUS:.3f}")
             print("")
+            
+        # SPACEBAR - Reset particles (key 32)
+        elif key == 32:  # Spacebar key
+            self.reset_particles()
         
         # Ignore unmapped keys silently
     
@@ -672,6 +753,11 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("\n" + "="*50)
         print("PARTICLE LIFE CONTROLS")
         print("="*50)
+        print("MOUSE:")
+        print("Left Click + Drag - Push particles away from cursor")
+        print("Mouse Wheel - Adjust mouse repulsion radius")
+        print("")
+        print("KEYBOARD:")
         print("1/2 - Decrease/Increase Force Factor")
         print("3/4 - Decrease/Increase R-Max")
         print("5/6 - Decrease/Increase Damping") 
@@ -679,11 +765,58 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("9   - Toggle Boundaries (wrap/bounce)")
         print("Q/W - Decrease/Increase Number of Types")
         print("E/R - Decrease/Increase Min Distance (Hard Collision Radius)")
+        print("T/Y - Decrease/Increase Mouse Repulsion Strength")
         print("C   - Cycle Colour Palettes")
         print("M   - Randomize Attraction Matrix")
+        print("SPACE - Reset/Disperse Particles")
         print("H   - Show this help")
         print("P   - Print current values")
         print("="*50 + "\n")
+    
+    # Mouse event handlers using the correct method names
+    def on_mouse_press_event(self, x, y, button):
+        """Handle mouse button press events"""
+        if button == 1:  # Left mouse button
+            self.mouse_pressed = True
+            # Convert screen coordinates to normalized coordinates (-1 to 1)
+            width, height = self.wnd.size
+            norm_x = (x / width) * 2.0 - 1.0
+            norm_y = -((y / height) * 2.0 - 1.0)  # Flip Y axis
+            self.mouse_pos = (norm_x, norm_y)
+
+    def on_mouse_release_event(self, x: int, y: int, button: int):
+        """Handle mouse button release events"""
+        if button == 1:  # Left mouse button
+            self.mouse_pressed = False
+
+    def on_mouse_position_event(self, x, y, dx, dy):
+        """Handle mouse movement"""
+        if self.mouse_pressed:
+            # Convert screen coordinates to normalized coordinates (-1 to 1)
+            width, height = self.wnd.size
+            norm_x = (x / width) * 2.0 - 1.0
+            norm_y = -((y / height) * 2.0 - 1.0)  # Flip Y axis
+            self.mouse_pos = (norm_x, norm_y)
+
+    def on_mouse_drag_event(self, x, y, dx, dy):
+        """Handle mouse drag"""
+        if self.mouse_pressed:
+            # Convert screen coordinates to normalized coordinates (-1 to 1)
+            width, height = self.wnd.size
+            norm_x = (x / width) * 2.0 - 1.0
+            norm_y = -((y / height) * 2.0 - 1.0)  # Flip Y axis
+            self.mouse_pos = (norm_x, norm_y)
+
+    def on_mouse_scroll_event(self, x_offset: float, y_offset: float):
+        """Handle mouse wheel"""
+        # Scroll up/down to change mouse repulsion radius
+        old_radius = config.MOUSE_REPULSION_RADIUS
+        if y_offset > 0:
+            config.MOUSE_REPULSION_RADIUS = min(1.0, config.MOUSE_REPULSION_RADIUS + 0.05)
+        else:
+            config.MOUSE_REPULSION_RADIUS = max(0.1, config.MOUSE_REPULSION_RADIUS - 0.05)
+        
+        print(f"MOUSE REPULSION RADIUS: {old_radius:.3f} -> {config.MOUSE_REPULSION_RADIUS:.3f}")
         
     def on_close(self):
         """Clean up when window closes"""
