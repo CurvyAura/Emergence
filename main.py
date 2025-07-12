@@ -14,10 +14,10 @@ from particle_life import ParticleLifeWindow
 def prevent_sleep():
     """Prevent Windows from going to sleep while the simulation runs"""
     # Windows constants for SetThreadExecutionState
-    ES_CONTINUOUS = 0x80000000
-    ES_SYSTEM_REQUIRED = 0x00000001
-    ES_DISPLAY_REQUIRED = 0x00000002
-    
+    ES_CONTINUOUS = 0x80000000 # modifier flag to keep the state set
+    ES_SYSTEM_REQUIRED = 0x00000001 # prevent the system from sleeping
+    ES_DISPLAY_REQUIRED = 0x00000002 # prevent the display from sleeping
+
     # Prevent system sleep and keep display on
     ctypes.windll.kernel32.SetThreadExecutionState(
         ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
@@ -39,14 +39,10 @@ def main():
     print("Starting Particle Life Simulation...")
     
     try:
-        # Prevent sleep before starting
         prevent_sleep()
-        
-        # Run the simulation
         ParticleLifeWindow.run()
         
     finally:
-        # Always restore sleep behavior when done (even if there's an error)
         restore_sleep()
 
 

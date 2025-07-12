@@ -11,7 +11,14 @@ import moderngl
 import numpy as np
 import config
 
+""" 
+Particle Life Simulation Window Class
 
+Creates a window to display the simulation
+Sets up all the particles
+Handles what happens when you press keys or move the mouse
+Runs the simulation loop
+"""
 class ParticleLifeWindow(mglw.WindowConfig):
     """Basic window for our particle life simulation"""
     
@@ -19,12 +26,12 @@ class ParticleLifeWindow(mglw.WindowConfig):
     title = "Particle Life Simulation"
     window_size = (800, 600)
     resizable = True
-    vsync = False  # Disable VSync for maximum FPS
+    vsync = False
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        # Get the OpenGL context - this is what lets us talk to the GPU
+        # Get the OpenGL context - this is what lets us talk to the GPU (works like a direct phone line to the graphics card)
         self.ctx = self.wnd.ctx
         
         print(f"OpenGL Version: {self.ctx.version_code}")
@@ -34,7 +41,6 @@ class ParticleLifeWindow(mglw.WindowConfig):
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
         
-        # Set up our first particles
         self.setup_particles()
         
         # Mouse interaction state
@@ -124,11 +130,11 @@ class ParticleLifeWindow(mglw.WindowConfig):
         print("🔄 Resetting particles - dispersing randomly...")
         
         # Generate new random positions and velocities
-        positions = np.random.uniform(
+        positions = np.random.uniform( # <-- np.random.uniform(...) creates random decimal numbers
             -config.INITIAL_POSITION_RANGE, 
             config.INITIAL_POSITION_RANGE, 
             (self.num_particles, 2)
-        ).astype(np.float32)
+        ).astype(np.float32) # <-- .astype(np.float32) converts them to float32 (4 bytes per number less precision than float64 but faster)
         
         velocities = np.random.uniform(
             -config.INITIAL_VELOCITY_RANGE, 
