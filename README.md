@@ -1,7 +1,5 @@
 # Emergence - Interactive Particle Life Simulation
 
-<img width="1647" height="962" alt="image" src="https://github.com/user-attachments/assets/662bbb0d-f854-459d-afbe-cdf81c16d347" />
-
 A GPU-accelerated particle life simulation built with Python and ModernGL, featuring real-time parameter adjustment and dynamic emergent behavior exploration.
 
 ### 🎮 Controls
@@ -112,6 +110,11 @@ Feel free to contribute improvements, new features, or bug fixes! Some ideas:
 - Save/load system for interesting configurations
 - Performance optimizations
 - New visualization modes
+
+## Gallery
+
+<img width="1647" height="962" alt="image" src="https://github.com/user-attachments/assets/662bbb0d-f854-459d-afbe-cdf81c16d347" />
+<img width="1740" height="961" alt="image" src="https://github.com/user-attachments/assets/85df79bc-3241-4c49-b7bf-8b1bf8f976b2" />
 
 ## License
 
